@@ -14,9 +14,9 @@ WHERE writer.name != 'N/A'
 	ORDER BY COUNT(movie.writer) DESC
 
 
-SELECT COUNT(ma.actor_id), a.name FROM movie_actors as ma
-  JOIN actors as a
-    ON a.id = ma.actor_id
-    WHERE a.name != 'N/A'
-GROUP BY ma.actor_id
-ORDER BY COUNT(ma.actor_id) DESC
+SELECT COUNT(movactor.actor_id), actor.name FROM movie_actors as movactor
+JOIN actors as actor
+    ON actor.id = movactor.actor_id
+WHERE actor.name != 'N/A'
+	GROUP BY movactor.actor_id
+	ORDER BY COUNT(movactor.actor_id) DESC
