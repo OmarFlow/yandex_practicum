@@ -1,5 +1,5 @@
 import requests
-
+import json
 from flask import Flask, jsonify, request, abort
 
 from validator import validator
@@ -10,30 +10,30 @@ app.debug = True
 @app.route('/api/movies/<movie_id>', methods=['GET'])
 def movie_details(movie_id: str) -> str:
     # Код, получающий данные из ES об одном фильме
-    payload = jsonify(
+    payload = json.dumps(
         {
             "query": {
                 "match": {
+                    "field": "id",
                     "message": {
                         "query": movie_id,
-                        "field": "id"
                     }
                 }
             }
         }
     )
 
-    # request = requests.get(
-    #     url='http://127.0.0.1:9200/movies/_search',
-    #     data=payload,
-    #     headers={"Content-Type": "application/x-ndjson"}
-    # )
-
-    # abort(404)
-
-    result = {'id': movie_id}
+    re = requests.get(
+        url='http://127.0.0.1:9200/movies/_search',
+        data=payload,
+        headers={"Content-Type": "application/x-ndjson"}
+    )
+    print(re.json())
+    # # abort(404)
+    #
+    # result = {'id': movie_id}
     return jsonify(
-        result
+        [1,2,3]
     )
 
 
