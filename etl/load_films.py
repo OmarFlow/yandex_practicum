@@ -4,7 +4,7 @@ import requests
 
 connection = sqlite3.connect("db.sqlite")
 cursor = connection.cursor()
-url = 'http://localhost:9200/movies2/_bulk'
+url = 'http://localhost:9200/movies/_bulk'
 
 initial_data = cursor.execute("select id, imdb_rating, genre, title, plot, director, writers from movies").fetchall()
 
@@ -75,5 +75,7 @@ for row in body:
     payload = payload + f"{row} \n"
 data_for_elastic = payload.encode('utf-8')
 
-r = requests.post(url, data=data_for_elastic, headers={"Content-Type": "application/x-ndjson"})
+
+r = requests.post('http://localhost:9200/movies/_bulk', data=data_for_elastic, headers={"Content-Type": "application/x-ndjson"})
+print(r.content)
 cursor.close()

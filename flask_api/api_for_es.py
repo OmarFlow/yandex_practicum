@@ -20,22 +20,24 @@ def movie_details(movie_id: str) -> str:
     payload = json.dumps(
         {
             "query": {
-                "match": {
-                    "field": "id",
-                    "message": {
-                        "query": movie_id,
-                    }
+                "term": {
+                    "_id": movie_id
                 }
             }
         }
     )
+    query = {
+        "term": {
+            "_id": movie_id
+        }
+    }
 
-    re = requests.get(
+    r= requests.get(
         url='http://127.0.0.1:9200/movies/_search',
         data=payload,
         headers={"Content-Type": "application/x-ndjson"}
     )
-    print(re.json())
+    print(r.json())
     # # abort(404)
     #
     # result = {'id': movie_id}
@@ -47,29 +49,25 @@ def movie_details(movie_id: str) -> str:
 @app.route('/api/movies', methods=['GET'], strict_slashes=False)
 def movies_list() -> str:
     data = request.args
-
     validation_result = validator(data)
+
     if validation_result:
         return jsonify(validation_result), 422
 
     payload = {
         "_source": ['id', 'title', 'imdb_rating'],
-        "size": data['limit'] or DEFAULT_SIZE,
-        "from": data['page'] or DEFAULT_PAGE,
-        "sort": {data['sort'] or DEFAULT_SORT_BY: {"order": data.get('sort_order', DEFAULT_SORT)}},
+        "size": data.get('limit', DEFAULT_SIZE),
+        "from": data.get('page', DEFAULT_PAGE),
+        "sort": {data.get('sort', DEFAULT_SORT_BY): {"order": data.get('sort_order', DEFAULT_SORT)}},
         "query": query_definition(data.get('search'))
     }
 
     r = requests.get('http://localhost:9200/movies/_search', json=payload)
-    print(r.content)
+    result = []
+    for f in json.loads(r.content)['hits']['hits']:
+        result.append(f['_source'])
 
-
-
-    return jsonify(
-        {
-            'qw': data.get('sort')
-        }
-    )
+    return jsonify(result)
 
 
 if __name__ == '__main__':
