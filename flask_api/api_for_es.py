@@ -14,36 +14,32 @@ DEFAULT_PAGE = 1
 app = Flask('movies_service')
 app.debug = True
 
+
 @app.route('/api/movies/<movie_id>', methods=['GET'])
 def movie_details(movie_id: str) -> str:
     # Код, получающий данные из ES об одном фильме
     payload = json.dumps(
         {
             "query": {
-                "term": {
-                    "_id": movie_id
+                "match": {
+                    "id": movie_id
                 }
             }
         }
     )
-    query = {
-        "term": {
-            "_id": movie_id
-        }
-    }
 
-    r= requests.get(
+    response = requests.get(
         url='http://127.0.0.1:9200/movies/_search',
         data=payload,
-        headers={"Content-Type": "application/x-ndjson"}
+        headers={'Content-Type': 'application/json'}
     )
-    print(r.json())
-    # # abort(404)
-    #
-    # result = {'id': movie_id}
+
+    if response.json()['took'] == 0:
+        abort(404)
+
     return jsonify(
-        [1,2,3]
-    )
+        response.json()['hits']['hits'][0]['_source']
+    ), 200
 
 
 @app.route('/api/movies', methods=['GET'], strict_slashes=False)
@@ -62,12 +58,18 @@ def movies_list() -> str:
         "query": query_definition(data.get('search'))
     }
 
-    r = requests.get('http://localhost:9200/movies/_search', json=payload)
+    response = requests.get(
+        'http://localhost:9200/movies/_search',
+        json=payload,
+        headers={'Content-Type': 'application/json'}
+    )
+
     result = []
-    for f in json.loads(r.content)['hits']['hits']:
+
+    for f in response.json()['hits']['hits']:
         result.append(f['_source'])
 
-    return jsonify(result)
+    return jsonify(result), 200
 
 
 if __name__ == '__main__':
